@@ -1,99 +1,59 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
-  height: 100vh;
-  background: linear-gradient(to bottom, #0a001a, #1e0038);
-  color: #e0d0ff;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom right, rgba(100, 50, 200, 0.3), transparent, rgba(180, 50, 180, 0.2));
-  pointer-events: none;
-}
-
-.content {
-  text-align: center;
-  z-index: 10;
-  opacity: 0;
-  transform: translateY(80px);
-  animation: fadeInUp 2.8s ease-out forwards;
+    background-color: #0c0c0c;
+    color: #b700ff;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    padding: 50px;
+    margin: 0;
 }
 
 h1 {
-  font-size: 8rem;
-  font-weight: 900;
-  background: linear-gradient(to right, #bb86fc, #daaaff, #9f7aea);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 0.1em;
-  margin-bottom: 1rem;
+    font-size: 3em;
+    text-shadow: 0 0 10px #b700ff;
+    margin-bottom: 20px;
 }
 
-.subtitle {
-  font-size: 4rem;
-  font-weight: 300;
-  opacity: 0;
-  animation: fadeIn 2s ease-out 1.5s forwards;
+input[type="text"] {
+    width: 400px;
+    padding: 15px;
+    font-size: 1.2em;
+    background: #1a1a1a;
+    border: 2px solid #b700ff;
+    color: #fff;
+    border-radius: 8px;
+    outline: none;
 }
 
-.input-section {
-  margin-top: 4rem;
-  opacity: 0;
-  animation: fadeIn 2s ease-out 2s forwards;
+input[type="text"]::placeholder {
+    color: #666;
 }
 
-#assetId {
-  padding: 1rem 1.5rem;
-  font-size: 1.5rem;
-  width: 400px;
-  max-width: 90%;
-  background: rgba(30, 0, 56, 0.6);
-  border: 2px solid #bb86fc;
-  color: white;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
+button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    background: #b700ff;
+    border: none;
+    color: #000;
+    margin-top: 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 0 15px #b700ff;
+    font-weight: bold;
 }
 
-#convertBtn {
-  padding: 1rem 3rem;
-  font-size: 1.5rem;
-  background: linear-gradient(to right, #9f7aea, #bb86fc);
-  border: none;
-  color: white;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: transform 0.3s;
-}
-
-#convertBtn:hover {
-  transform: scale(1.05);
+button:hover {
+    background: #d900ff;
+    box-shadow: 0 0 20px #d900ff;
 }
 
 #status {
-  margin-top: 2rem;
-  font-size: 1.8rem;
-  min-height: 2.5rem;
+    margin-top: 20px;
+    font-size: 1.1em;
+    min-height: 1.5em;
 }
 
-@keyframes fadeInUp {
-  to { opacity: 1; transform: translateY(0); }
+footer {
+    margin-top: 80px;
+    font-size: 0.8em;
+    color: #660099;
 }
-
-@keyframes fadeIn {
-  to { opacity: 0.9; }
-}
-
-audio { display: none; }
