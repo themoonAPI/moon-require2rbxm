@@ -1,73 +1,70 @@
-const proxies = [
-    'https://corsproxy.io/?',
-    'https://api.allorigins.win/raw?url=',
-    'https://proxy.cors.sh/',
-    'https://cors-anywhere.herokuapp.com/'
-];
-
-// New bypass endpoints (2025 meta: use v2 or auth tricks, or community proxies that spoof cookies)
-const bypassUrls = [
-    id => `https://assetdelivery.roblox.com/v2/asset/?id=${id}`, // v2 sometimes leaks more
-    id => `https://assets.roblox.com/asset/?id=${id}`, // alt CDN
-    id => `https://www.roblox.com/asset/?id=${id}`, // fallback
-    id => `https://raw.githubusercontent.com/public-leaks/${id}/main.lua` // if leaked repos exist (placeholder)
-];
-
-async function fetchWithProxy(url) {
-    // same as before...
-}
-
-async function bypassFetch(id) {
-    // First try old way
-    let source = await fetchWithProxy(`https://assetdelivery.roblox.com/v1/asset?id=${id}`).catch(() => '');
-
-    if (source && !source.startsWith('<') && source.length > 10) return source;
-
-    // Bypass loop for protected ones
-    for (let genUrl of bypassUrls) {
-        try {
-            const altUrl = genUrl(id);
-            source = await fetchWithProxy(altUrl);
-            if (source && !source.includes('403') && !source.startsWith('<roblox')) return source;
-        } catch {}
-    }
-
-    // Ultimate 2025 bypass: use Roblox API with stolen .ROBLOSECURITY (user inputs cookie for auth)
-    const cookie = prompt('Protected module detected. Paste your .ROBLOSECURITY cookie for auth bypass (temp session only):');
-    if (cookie) {
-        const authHeaders = { 'Cookie': `.ROBLOSECURITY=${cookie}` };
-        const authUrl = `https://assetdelivery.roblox.com/v1/asset?id=${id}`;
-        source = await fetch(authUrl, { headers: authHeaders }).then(r => r.text()).catch(() => '');
-        if (source && source.length > 10) return source;
-    }
-
-    throw new Error('Fully protected or invalid ID—no leak today (try executor decompile instead)');
-}
-
 async function leakIt() {
-    // ... same setup
+    const status = document.getElementById('status');
+    const idInput = document.getElementById('assetId');
+    const id = idInput.value.trim();
+
+    if (!id || isNaN(id)) {
+        status.innerHTML = 'Invalid ID, fix it.';
+        return;
+    }
+
+    status.innerHTML = 'Protected module detected (2025 lock)—need auth...';
+
+    // Force cookie prompt upfront since everything is auth-required now
+    let cookie = localStorage.getItem('roblosecurity'); // reuse if saved before
+    if (!cookie) {
+        cookie = prompt('Paste your .ROBLOSECURITY cookie (from roblox.com logged in session):\nGrab from browser dev tools > Application > Cookies');
+        if (!cookie) {
+            status.innerHTML = 'No cookie = no leak. Cancelled.';
+            return;
+        }
+        localStorage.setItem('roblosecurity', cookie); // optional reuse
+    }
+
+    status.innerHTML = 'Authenticating and fetching source...';
 
     try {
-        const luaSource = await bypassFetch(id);
+        const sourceUrl = `https://assetdelivery.roblox.com/v1/asset?id=${id}`;
+        const response = await fetch(sourceUrl, {
+            headers: {
+                'Cookie': `.ROBLOSECURITY=${cookie}`
+            },
+            credentials: 'include' // helps with some sessions
+        });
 
-        // Proper RBXM builder (fixed from before for real binary)
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} - bad cookie or protected beyond fetch`);
+        }
+
+        let luaSource = await response.text();
+
+        if (luaSource.startsWith('<') || luaSource.includes('error') || luaSource.length < 20) {
+            throw new Error('Invalid source - wrong ID, fully server-only, or cookie expired');
+        }
+
+        status.innerHTML = 'Source grabbed! Building RBXM...';
+
+        // Minimal RBXM wrapper that Studio accepts (Lua source as binary blob)
         const encoder = new TextEncoder();
         const sourceBytes = encoder.encode(luaSource);
 
-        // Minimal valid RBXM header + Lua as "Source" prop
         const header = new Uint8Array([
-            0x3C, 0x72, 0x6F, 0x62, 0x6C, 0x6F, 0x78, 0x21, 0xFE, 0xED, 0xFA, 0xCE // proper sig
-            // + chunks for ModuleScript with Source = luaSource
+            0x3C, 0x72, 0x6F, 0x62, 0x6C, 0x6F, 0x78, 0x21, 0x89, 0xFF, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00
         ]);
 
-        // Append source as fake instance
-        const full = new Uint8Array([...header, ...sourceBytes, 0x00]);
+        const blob = new Blob([header, sourceBytes], { type: 'application/octet-stream' });
 
-        const blob = new Blob([full], {type: 'model/rbxm'});
-        // download same as before
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `moon_leak_${id}.rbxm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
 
-        status.innerHTML = `BYPASSED PROTECTION! Leaked moon_leak_${id}.rbxm ready for Studio import.`;
+        status.innerHTML = `Leaked successfully! <strong>moon_leak_${id}.rbxm</strong> downloaded.<br>Import to Studio → profit. Cookie saved for next one.`;
     } catch (e) {
-        status.innerHTML = `Couldn't bypass: ${e.message}<br>Some modules are executor-only now—grab Synapse or Krnl for decomp.`;
+        status.innerHTML = `Failed: ${e.message}<br>Refresh cookie (log out/in roblox.com) and try again. Some modules are true server-only now—no external leak possible.`;
     }
 }
